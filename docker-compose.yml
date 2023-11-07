@@ -53,3 +53,7 @@ services:
 
 networks:
   prestashop_network:
+
+volumes:
+  psdata:
+  dbdata:
