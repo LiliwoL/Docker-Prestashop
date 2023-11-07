@@ -2,15 +2,15 @@ version: '3'
 
 services:
 
-  db:
+  prestashop_db:
     container_name: prestashop_db
-    volumes:
-      - dbdata:/var/lib/mysql
     image: mysql:5.7
-    restart: unless-stopped
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: prestashop
-      MYSQL_ROOT_USER: prestashop
+      MYSQL_ROOT_PASSWORD: rootroot
+      MYSQL_USER: prestashop
+      MYSQL_PASSWORD: prestashop
       MYSQL_DATABASE: prestashop
     networks:
       - prestashop-net
@@ -23,9 +23,7 @@ services:
     image: prestashop/prestashop:latest # Latest stable version of the PrestaShop, to see all available images go to ...
     restart: unless-stopped
     depends_on:
-      - db
-    links:
-      - db:db
+      - prestashop_db
     ports:
       - 80:80
     volumes:
@@ -38,7 +36,7 @@ services:
       PS_HOST_MODE: 0
       PS_DEMO_MODE: 1
 
-      DB_SERVER: db
+      DB_SERVER: prestashop_db
       DB_USER: prestashop
       DB_PASSWD: prestashop
       DB_PREFIX: ps_
@@ -57,19 +55,18 @@ services:
     networks:
       - prestashop-net
 
+
   phpmyadmin:
     # Spécifique mac M1
     #image: arm64v8/phpmyadmin
     image: phpmyadmin/phpmyadmin
     container_name: prestashop_phpmyadmin
-    links:
-      - db:db
     ports:
       - 8081:80
     depends_on:
-      - db
+      - prestashop_db
     environment:
-      - PMA_HOST:db
+      - PMA_HOST:prestashop_db
       - PMA_USER:prestashop
       - PMA_PASSWORD:prestashop
     restart: unless-stopped
