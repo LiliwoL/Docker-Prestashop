@@ -30,18 +30,20 @@ services:
       - 80:80
     volumes:
       - ./prestashop:/var/www/html
-      - ./prestashop/modules:/var/www/html/modules
-      - ./prestashop/themes:/var/www/html/themes
-      - ./prestashop/override:/var/www/html/override
+      - ./modules:/var/www/html/modules
+      - ./themes:/var/www/html/themes
+      - ./override:/var/www/html/override
     environment:
       PS_DEV_MODE: 1
       PS_HOST_MODE: 0
       PS_DEMO_MODE: 1
+
       DB_SERVER: db
       DB_USER: prestashop
       DB_PASSWD: prestashop
       DB_PREFIX: ps_
       DB_NAME: prestashop
+
       PS_INSTALL_AUTO: 1
       PS_ERASE_DB: 0
       PS_INSTALL_DB: 0
