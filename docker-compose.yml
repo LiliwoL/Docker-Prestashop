@@ -9,13 +9,16 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: rootroot
+
+      MYSQL_DATABASE: prestashop
       MYSQL_USER: prestashop
       MYSQL_PASSWORD: prestashop
-      MYSQL_DATABASE: prestashop
     networks:
       - prestashop-net
     ports:
-      - 3306:3306
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
 
 
   prestashop:
@@ -23,6 +26,8 @@ services:
     image: prestashop/prestashop:latest # Latest stable version of the PrestaShop, to see all available images go to ...
     restart: unless-stopped
     depends_on:
+      - prestashop_db
+    links:
       - prestashop_db
     ports:
       - 80:80
@@ -56,7 +61,7 @@ services:
       - prestashop-net
 
 
-  phpmyadmin:
+  prestashop_phpmyadmin:
     # Spécifique mac M1
     #image: arm64v8/phpmyadmin
     image: phpmyadmin/phpmyadmin
@@ -65,11 +70,15 @@ services:
       - 8081:80
     depends_on:
       - prestashop_db
+    links:
+      - prestashop_db
     environment:
-      - PMA_HOST:prestashop_db
-      - PMA_USER:prestashop
-      - PMA_PASSWORD:prestashop
-    restart: unless-stopped
+      PMA_HOST: prestashop_db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      PMA_USER: prestashop
+      PMA_PASSWORD: prestashop
+    restart: always
     networks:
       - prestashop-net
 
