@@ -1,65 +1,46 @@
-version: '3'
+version: "3"
 
 services:
-
-  prestashop_db:
-    container_name: prestashop_db
-    image: mysql:5.7
-    restart: always
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_ROOT_PASSWORD: rootroot
-
-      MYSQL_DATABASE: prestashop
-      MYSQL_USER: prestashop
-      MYSQL_PASSWORD: prestashop
-    networks:
-      - prestashop-net
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-
-
   prestashop:
-    container_name: prestashop
-    image: prestashop/prestashop:latest # Latest stable version of the PrestaShop, to see all available images go to ...
-    restart: unless-stopped
-    depends_on:
-      - prestashop_db
-    links:
-      - prestashop_db
-    ports:
-      - 80:80
-    volumes:
-      #- ./prestashop:/var/www/html
-      - ./modules:/var/www/html/modules
-      - ./themes:/var/www/html/themes
-      - ./override:/var/www/html/override
+    image: prestashop/prestashop:8-apache
     environment:
-      PS_DEV_MODE: 1
-      #PS_HOST_MODE: 0
-      #PS_DEMO_MODE: 1
-
-      DB_SERVER: prestashop_db
-      DB_NAME: prestashop
-      DB_USER: prestashop
-      DB_PASSWD: prestashop
-      DB_PREFIX: ps_
-
-      PS_INSTALL_AUTO: 1
-      PS_ERASE_DB: 1
-      PS_INSTALL_DB: 1
-      PS_LANGUAGE: fr
-      PS_COUNTRY: FR
-      PS_ALL_LANGUAGES: 0
-      PS_FOLDER_ADMIN: admin4577
-      PS_FOLDER_INSTALL: install4577
-      PS_ENABLE_SSL: 0
-      PS_DOMAIN: localhost:80
+      - DB_SERVER=db
+      - DB_NAME=prestashop
+      - DB_USER=prestashop
+      - DB_PASSWD=prestashop
+      - PS_DEV_MODE=1
+      - PS_DEMO_MODE=1
+      - PS_INSTALL_AUTO=1
+      - PS_DOMAIN=localhost:8080
+      - PS_FOLDER_ADMIN=admin
+      - ADMIN_MAIL=demo@prestashop.com
+      - ADMIN_PASSWD=prestashop_demo
+    links:
+      - db
+    depends_on:
+      - db
+    ports:
+      - 8080:80
     networks:
       - prestashop-net
+    volumes:
+      - ./app:/var/www/html
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
+  db:
+    image: mysql:8
+    command: --default-authentication-plugin=caching_sha2_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_DATABASE=prestashop
+      - MYSQL_USER=prestashop
+      - MYSQL_PASSWORD=prestashop
+    networks:
+      - prestashop-net
 
   prestashop_phpmyadmin:
     # Spécifique mac M1
@@ -69,11 +50,11 @@ services:
     ports:
       - 8081:80
     depends_on:
-      - prestashop_db
+      - db
     links:
-      - prestashop_db
+      - db
     environment:
-      PMA_HOST: prestashop_db
+      PMA_HOST: db
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
       PMA_USER: prestashop
@@ -82,11 +63,5 @@ services:
     networks:
       - prestashop-net
 
-
 networks:
   prestashop-net:
-    driver: bridge
-
-volumes:
-  psdata:
-  dbdata:
